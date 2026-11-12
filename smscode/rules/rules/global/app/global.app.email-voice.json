@@ -1,0 +1,83 @@
+{
+  "specVersion": 1,
+  "id": "global.app.email-voice",
+  "name": "Email and Voice app notifications",
+  "description": "Rules for verification codes shown in mail clients and Google Voice notifications.",
+  "locale": "und",
+  "updatedAt": "2026-07-06T00:00:00+08:00",
+  "rules": [
+    {
+      "id": "gmail-verification-code",
+      "company": "Gmail",
+      "codeKeyword": "verification code",
+      "codeRegex": "(?i)(?<![A-Z0-9])(?=[A-Z0-9]{4,10}(?![A-Z0-9]))(?=[A-Z0-9]*\\d)[A-Z0-9]{4,10}",
+      "packageNameHint": "com.google.android.gm",
+      "priority": 120,
+      "notes": "Matches verification-code notifications surfaced by Gmail. Negative cases such as URLs, amounts, dates, order numbers, and promotional codes should be rejected by the parser guards.",
+      "examples": [
+        {
+          "body": "Gmail verification code: 731284",
+          "expectedCode": "731284"
+        },
+        {
+          "body": "Gmail verification code: G7H9",
+          "expectedCode": "G7H9"
+        }
+      ]
+    },
+    {
+      "id": "gmail-cn-code",
+      "company": "Gmail",
+      "codeKeyword": "验证码",
+      "codeRegex": "(?i)(?<![A-Z0-9])(?=[A-Z0-9]{4,10}(?![A-Z0-9]))(?=[A-Z0-9]*\\d)[A-Z0-9]{4,10}",
+      "packageNameHint": "com.google.android.gm",
+      "priority": 120,
+      "notes": "Matches Chinese Gmail notification text that uses 验证码.",
+      "examples": [
+        {
+          "body": "Gmail 验证码：654321，请勿泄露。",
+          "expectedCode": "654321"
+        }
+      ]
+    },
+    {
+      "id": "android-email-verification-code",
+      "company": "Email",
+      "codeKeyword": "verification code",
+      "codeRegex": "(?i)(?<![A-Z0-9])(?=[A-Z0-9]{4,10}(?![A-Z0-9]))(?=[A-Z0-9]*\\d)[A-Z0-9]{4,10}",
+      "packageNameHint": "com.android.email",
+      "priority": 110,
+      "notes": "Matches stock Android Email verification notifications while keeping package scoping explicit.",
+      "examples": [
+        {
+          "body": "Email verification code is 482910",
+          "expectedCode": "482910"
+        },
+        {
+          "body": "Email verification code: A1B2C3",
+          "expectedCode": "A1B2C3"
+        }
+      ]
+    },
+    {
+      "id": "google-voice-verification-code",
+      "company": "Google Voice",
+      "codeKeyword": "verification code",
+      "codeRegex": "(?i)(?<![A-Z0-9])(?=[A-Z0-9]{4,10}(?![A-Z0-9]))(?=[A-Z0-9]*\\d)[A-Z0-9]{4,10}",
+      "senderRegex": "Google Voice|Voice",
+      "packageNameHint": "com.google.android.apps.googlevoice",
+      "priority": 130,
+      "notes": "Matches Google Voice verification notifications and uses sender/title scoping when available.",
+      "examples": [
+        {
+          "body": "Google Voice verification code is 824610",
+          "expectedCode": "824610"
+        },
+        {
+          "body": "Google Voice verification code: GV42",
+          "expectedCode": "GV42"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+package io.github.magisk317.smscode.common.utils
+
+import android.content.Context
+import android.database.ContentObserver
+import android.os.Handler
+import android.os.Looper
+import io.github.magisk317.smscode.data.db.DBProvider
+import java.util.concurrent.atomic.AtomicBoolean
+import io.github.magisk317.xposed.logging.MagiskOtel
+import io.github.magisk317.xposed.logging.XLog
+
+/**
+ * Registers ContentObservers in a hooked process so module-app writes can invalidate
+ * the in-process prefs / rules caches without waiting out their TTLs.
+ *
+ * Writers signal via [DBProvider.notifyPrefsCacheChanged] /
+ * [DBProvider.notifyRulesCacheChanged] (ContentResolver.notifyChange on dedicated
+ * signal URIs). Observers run on the main looper; invalidation is cheap and thread-safe.
+ */
+object HookCacheInvalidator {
+    private val registered = AtomicBoolean(false)
+
+    @Volatile
+    private var prefsObserver: ContentObserver? = null
+
+    @Volatile
+    private var rulesObserver: ContentObserver? = null
+
+    /**
+     * Idempotent: first successful registration wins. Safe to call from every
+     * hook-process init path (SmsHandlerHook plugin context creation, etc.).
+     */
+    fun register(moduleContext: Context) {
+        if (registered.get()) return
+        synchronized(this) {
+            if (registered.get()) return
+            val appContext = moduleContext.applicationContext ?: moduleContext
+            val handler = Handler(Looper.getMainLooper())
+            val prefsObs = object : ContentObserver(handler) {
+                override fun onChange(selfChange: Boolean) {
+                    HookPrefsReader.invalidateCache()
+                    XLog.d(message = "HookCacheInvalidator: prefs cache cleared")
+                    MagiskOtel.event(
+                        name = "hook.cache",
+                        attributes = mapOf(
+                            "result" to "ok",
+                            "duration_ms" to "0",
+                            "process" to "hook",
+                            "stage" to "prefs_invalidate",
+                        ),
+                        statusOk = true,
+                    )
+                }
+            }
+            val rulesObs = object : ContentObserver(handler) {
+                override fun onChange(selfChange: Boolean) {
+                    SmsCodeUtils.invalidateRuleCache()
+                    SmsCodeUtils.invalidateOfficialRuleCache()
+                    XLog.d(message = "HookCacheInvalidator: rules caches cleared")
+                    MagiskOtel.event(
+                        name = "hook.cache",
+                        attributes = mapOf(
+                            "result" to "ok",
+                            "duration_ms" to "0",
+                            "process" to "hook",
+                            "stage" to "rules_invalidate",
+                        ),
+                        statusOk = true,
+                    )
+                }
+            }
+            runCatching {
+                appContext.contentResolver.registerContentObserver(
+                    DBProvider.prefsCacheContentUri(appContext),
+                    false,
+                    prefsObs,
+                )
+                appContext.contentResolver.registerContentObserver(
+                    DBProvider.rulesCacheContentUri(appContext),
+                    false,
+                    rulesObs,
+                )
+                prefsObserver = prefsObs
+                rulesObserver = rulesObs
+                registered.set(true)
+                MagiskOtel.event(
+                    name = "hook.cache",
+                    attributes = mapOf(
+                        "result" to "ok",
+                        "duration_ms" to "0",
+                        "process" to "hook",
+                        "stage" to "register",
+                    ),
+                    statusOk = true,
+                )
+                XLog.i(message = "HookCacheInvalidator: observers registered")
+            }.onFailure { error ->
+                // Unregister partial registration if any.
+                runCatching { appContext.contentResolver.unregisterContentObserver(prefsObs) }.onFailure {
+                    XLog.w("onChange: unregisterContentObserver failed: ${error.message}", error)
+                }
+                runCatching { appContext.contentResolver.unregisterContentObserver(rulesObs) }.onFailure {
+                    XLog.w("onChange: unregisterContentObserver failed: ${it.message}", it)
+                }
+                XLog.w(
+                    message = "HookCacheInvalidator: register failed: %s",
+                    error.message ?: error.javaClass.simpleName,
+                )
+            }
+        }
+    }
+}

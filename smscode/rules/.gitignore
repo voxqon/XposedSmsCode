@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+
+# Local agent guidance
+AGENTS.md
+AGENTS.override.md
+agents.md
+agents.override.md

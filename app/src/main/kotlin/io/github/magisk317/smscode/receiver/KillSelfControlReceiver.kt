@@ -1,0 +1,103 @@
+package io.github.magisk317.smscode.receiver
+
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.os.Process
+import io.github.magisk317.smscode.common.constant.PrefConst
+import io.github.magisk317.smscode.runtime.common.prefs.AppPreferencesDataStore
+import io.github.magisk317.smscode.runtime.contract.ipc.IpcTokenMatcher
+import io.github.magisk317.xposed.logging.XLog
+import kotlinx.coroutines.runBlocking
+import io.github.magisk317.xposed.logging.MagiskOtel
+
+class KillSelfControlReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action != ACTION_KILL_SELF) {
+            XLog.w(message = "KillSelfControlReceiver: ignored unexpected action=%s", intent.action.orEmpty())
+            MagiskOtel.event(
+                name = "app.kill",
+                attributes = mapOf(
+                    "result" to "skip",
+                    "duration_ms" to "0",
+                    "process" to "app",
+                    "stage" to "control",
+                    "reason" to "action_mismatch",
+                ),
+                statusOk = true,
+            )
+            return
+        }
+
+        val expectedToken = runBlocking {
+            AppPreferencesDataStore.getString(context, PrefConst.KEY_IPC_TOKEN, "")
+        }
+        val token = intent.getStringExtra(EXTRA_IPC_TOKEN).orEmpty()
+        if (!IpcTokenMatcher.matches(expectedToken, token)) {
+            XLog.w(message = "KillSelfControlReceiver: rejected kill request due to invalid token")
+            MagiskOtel.event(
+                name = "app.kill",
+                attributes = mapOf(
+                    "result" to "error",
+                    "duration_ms" to "0",
+                    "process" to "app",
+                    "stage" to "control",
+                    "reason" to "token_rejected",
+                ),
+                statusOk = false,
+            )
+            return
+        }
+
+        val delayMs = normalizeDelayMs(intent.getLongExtra(EXTRA_DELAY_MS, DEFAULT_DELAY_MS))
+        val processName = context.applicationInfo?.processName ?: context.packageName
+        XLog.w(
+            message = "KillSelfControlReceiver: kill self requested, delay=%dms pid=%d process=%s",
+            delayMs,
+            Process.myPid(),
+            processName,
+        )
+
+        MagiskOtel.event(
+            name = "app.kill",
+            attributes = mapOf(
+                "result" to "ok",
+                "duration_ms" to "0",
+                "process" to "app",
+                "stage" to "control",
+                "reason" to "scheduled",
+            ),
+            statusOk = true,
+        )
+        Thread {
+            try {
+                Thread.sleep(delayMs)
+            } catch (_: InterruptedException) {
+                // ignore
+            }
+            XLog.w(
+                message = "KillSelfControlReceiver: killing pid=%d process=%s",
+                Process.myPid(),
+                processName,
+            )
+            try {
+                Process.killProcess(Process.myPid())
+            } finally {
+                runCatching { System.exit(0) }.onFailure {
+                    // The process is already being killed in the line above; there is no
+                    // caller left to hear about a refused exit.
+                }
+            }
+        }.start()
+    }
+
+    companion object {
+        const val ACTION_KILL_SELF = "io.github.magisk317.smscode.ACTION_KILL_SELF"
+        const val EXTRA_DELAY_MS = "delay_ms"
+        const val EXTRA_IPC_TOKEN = "ipc_token"
+        private const val DEFAULT_DELAY_MS = 80L
+        private const val MAX_DELAY_MS = 5_000L
+
+        fun normalizeDelayMs(value: Long): Long = value.coerceIn(0L, MAX_DELAY_MS)
+    }
+}

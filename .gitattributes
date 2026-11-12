@@ -1,0 +1,2 @@
+smscode/rules/**/*.json text eol=lf
+third_party/maven/** -text

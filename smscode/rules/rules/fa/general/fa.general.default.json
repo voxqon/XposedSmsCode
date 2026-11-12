@@ -1,0 +1,142 @@
+{
+  "specVersion": 1,
+  "id": "fa.general.default",
+  "name": "قوانین عمومی کد تأیید فارسی",
+  "description": "波斯语短信验证码兜底规则：رمز/کد/پویا 字面量匹配（短语包含单词，单词锚点即可达）。",
+  "locale": "fa",
+  "updatedAt": "2026-10-06T00:58:10+08:00",
+  "rules": [
+    {
+      "id": "fa-default-numeric-ramz",
+      "company": null,
+      "codeKeyword": "رمز",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "ریال",
+        "تومان"
+      ],
+      "notes": "波斯语关键词兜底（رمز）。",
+      "examples": [
+        {
+          "body": "رمز: 482910",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "fa-default-alphanumeric-ramz",
+      "company": null,
+      "codeKeyword": "رمز",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "ریال",
+        "تومان"
+      ],
+      "notes": "波斯语关键词兜底（رمز）。",
+      "examples": [
+        {
+          "body": "رمز: AB12CD",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    },
+    {
+      "id": "fa-default-numeric-kod",
+      "company": null,
+      "codeKeyword": "کد",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "ریال",
+        "تومان"
+      ],
+      "notes": "波斯语关键词兜底（کد）。",
+      "examples": [
+        {
+          "body": "کد تأیید: 482910",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "fa-default-alphanumeric-kod",
+      "company": null,
+      "codeKeyword": "کد",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "ریال",
+        "تومان"
+      ],
+      "notes": "波斯语关键词兜底（کد）。",
+      "examples": [
+        {
+          "body": "کد تأیید: AB12CD",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    },
+    {
+      "id": "fa-default-numeric-poya",
+      "company": null,
+      "codeKeyword": "پویا",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "ریال",
+        "تومان"
+      ],
+      "notes": "波斯语关键词兜底（پویا）。",
+      "examples": [
+        {
+          "body": "رمز پویا: 482910",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "fa-default-alphanumeric-poya",
+      "company": null,
+      "codeKeyword": "پویا",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "ریال",
+        "تومان"
+      ],
+      "notes": "波斯语关键词兜底（پویا）。",
+      "examples": [
+        {
+          "body": "رمز پویا: AB12CD",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    }
+  ]
+}

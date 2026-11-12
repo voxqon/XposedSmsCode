@@ -1,0 +1,6 @@
+simulation: webdav
+routing: path
+mocks:
+  - name: User-selected WebDAV server
+    routeKey: webdav
+    path: postman/mocks/webdav/config.yaml

@@ -1,0 +1,6 @@
+- Updated to 3.3.7 (131).
+- Refactored inbound SMS interception and dispatch chain.
+- Moved data persistence and business logic to shared modules.
+- Unified card spacing and aligned with updated UI kit.
+- Upgraded to Gradle 9.8.1.
+- https://gitlab.com/magisk3171/XposedSmsCode/-/releases

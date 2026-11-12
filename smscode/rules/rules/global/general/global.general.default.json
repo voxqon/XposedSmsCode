@@ -1,0 +1,550 @@
+{
+  "specVersion": 1,
+  "id": "global.general.default",
+  "name": "通用验证码规则",
+  "description": "默认通用兜底规则：英文关键词字面量匹配（一词一条），并保留中文验证码关键词兜底。",
+  "locale": "und",
+  "updatedAt": "2026-10-06T00:58:39+08:00",
+  "rules": [
+    {
+      "id": "default-numeric-code",
+      "company": null,
+      "codeKeyword": "验证码",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "通用的 4-8 位纯数字验证码兜底规则。",
+      "examples": [
+        {
+          "body": "您的验证码是 482910，请在5分钟内完成输入。",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "default-alphanumeric-code",
+      "company": null,
+      "codeKeyword": "验证码",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "通用的 4-8 位字母数字混合验证码兜底规则。",
+      "examples": [
+        {
+          "body": "您的验证码是 AB12CD，请勿泄露给他人。",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    },
+    {
+      "id": "en-numeric-otp",
+      "company": null,
+      "codeKeyword": "otp",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your otp is 482910. Do not share it with anyone.",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "en-alphanumeric-otp",
+      "company": null,
+      "codeKeyword": "otp",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your otp is AB12CD. Do not share it with anyone.",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    },
+    {
+      "id": "en-numeric-verification-code",
+      "company": null,
+      "codeKeyword": "verification code",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your verification code is 482910. Do not share it with anyone.",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "en-alphanumeric-verification-code",
+      "company": null,
+      "codeKeyword": "verification code",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your verification code is AB12CD. Do not share it with anyone.",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    },
+    {
+      "id": "en-numeric-verification",
+      "company": null,
+      "codeKeyword": "verification",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your verification is 482910. Do not share it with anyone.",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "en-alphanumeric-verification",
+      "company": null,
+      "codeKeyword": "verification",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your verification is AB12CD. Do not share it with anyone.",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    },
+    {
+      "id": "en-numeric-verify",
+      "company": null,
+      "codeKeyword": "verify",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your verify is 482910. Do not share it with anyone.",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "en-alphanumeric-verify",
+      "company": null,
+      "codeKeyword": "verify",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your verify is AB12CD. Do not share it with anyone.",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    },
+    {
+      "id": "en-numeric-passcode",
+      "company": null,
+      "codeKeyword": "passcode",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your passcode is 482910. Do not share it with anyone.",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "en-alphanumeric-passcode",
+      "company": null,
+      "codeKeyword": "passcode",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your passcode is AB12CD. Do not share it with anyone.",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    },
+    {
+      "id": "en-numeric-password",
+      "company": null,
+      "codeKeyword": "password",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your password is 482910. Do not share it with anyone.",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "en-alphanumeric-password",
+      "company": null,
+      "codeKeyword": "password",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your password is AB12CD. Do not share it with anyone.",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    },
+    {
+      "id": "en-numeric-code",
+      "company": null,
+      "codeKeyword": "code",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your code is 482910. Do not share it with anyone.",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "en-alphanumeric-code",
+      "company": null,
+      "codeKeyword": "code",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your code is AB12CD. Do not share it with anyone.",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    },
+    {
+      "id": "en-numeric-pin-code",
+      "company": null,
+      "codeKeyword": "pin code",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your pin code is 482910. Do not share it with anyone.",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "en-alphanumeric-pin-code",
+      "company": null,
+      "codeKeyword": "pin code",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your pin code is AB12CD. Do not share it with anyone.",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    },
+    {
+      "id": "en-numeric-secure-code",
+      "company": null,
+      "codeKeyword": "secure code",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your secure code is 482910. Do not share it with anyone.",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "en-alphanumeric-secure-code",
+      "company": null,
+      "codeKeyword": "secure code",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "pts",
+        "points",
+        "min",
+        "sec"
+      ],
+      "notes": "English keyword fallback; literal contains match, so boundary-sensitive bare words (e.g. pin) stay out of the catalog and belong to user custom keywords (BUILTIN regex).",
+      "examples": [
+        {
+          "body": "Your secure code is AB12CD. Do not share it with anyone.",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "specVersion": 1,
+  "id": "ru.general.default",
+  "name": "Русские общие правила кода",
+  "description": "俄语短信验证码兜底规则：код/пароль/kod 字面量匹配（引擎侧 UNICODE_CASE 折叠大小写）。",
+  "locale": "ru",
+  "updatedAt": "2026-10-06T00:58:10+08:00",
+  "rules": [
+    {
+      "id": "ru-default-numeric-kod",
+      "company": null,
+      "codeKeyword": "код",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "руб"
+      ],
+      "notes": "俄语关键词兜底（код）。",
+      "examples": [
+        {
+          "body": "Ваш код: 482910",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "ru-default-alphanumeric-kod",
+      "company": null,
+      "codeKeyword": "код",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "руб"
+      ],
+      "notes": "俄语关键词兜底（код）。",
+      "examples": [
+        {
+          "body": "Ваш код: AB12CD",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    },
+    {
+      "id": "ru-default-numeric-parol",
+      "company": null,
+      "codeKeyword": "пароль",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "руб"
+      ],
+      "notes": "俄语关键词兜底（пароль）。",
+      "examples": [
+        {
+          "body": "Ваш пароль: 482910",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "ru-default-alphanumeric-parol",
+      "company": null,
+      "codeKeyword": "пароль",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "руб"
+      ],
+      "notes": "俄语关键词兜底（пароль）。",
+      "examples": [
+        {
+          "body": "Ваш пароль: AB12CD",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    },
+    {
+      "id": "ru-default-numeric-kod-latin",
+      "company": null,
+      "codeKeyword": "kod",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "руб"
+      ],
+      "notes": "俄语短信中的拉丁转写 kod。",
+      "examples": [
+        {
+          "body": "Vash kod: 482910",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "ru-default-alphanumeric-kod-latin",
+      "company": null,
+      "codeKeyword": "kod",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "pb",
+        "byte",
+        "bytes",
+        "руб"
+      ],
+      "notes": "俄语短信中的拉丁转写 kod。",
+      "examples": [
+        {
+          "body": "Vash kod: AB12CD",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    }
+  ]
+}

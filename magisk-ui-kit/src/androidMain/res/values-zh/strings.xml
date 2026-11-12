@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+
+
+    <string name="uikit_version_name">版本名称</string>
+    <string name="uikit_version_code">版本号</string>
+    <string name="uikit_manager_version">管理器版本</string>
+    <string name="uikit_runtime_version">运行时版本</string>
+    <string name="uikit_framework_type">框架类型</string>
+    <string name="uikit_framework_version">框架版本</string>
+    <string name="uikit_android_version">Android 版本</string>
+    <string name="uikit_android_codename">系统开发代号</string>
+    <string name="uikit_api_level">API 级别</string>
+    <string name="uikit_manufacturer">厂商</string>
+    <string name="uikit_model">型号</string>
+    <string name="uikit_pref_join_telegram_group_title">Telegram</string>
+    <string name="uikit_pref_join_telegram_group_summary">点击加入</string>
+    <string name="uikit_pref_join_qq_channel_title">QQ 频道</string>
+    <string name="uikit_pref_join_qq_channel_summary">点击加入</string>
+    <string name="uikit_pref_source_code_title">源代码</string>
+    <string name="uikit_pref_source_code_summary">欢迎 Star</string>
+    <string name="unknown">未知</string>
+    <string name="not_installed">未安装</string>
+
+    <string name="uikit_action_confirm">确定</string>
+    <string name="uikit_action_cancel">取消</string>
+    <string name="uikit_action_reset">重置</string>
+    <string name="uikit_action_clear">清空</string>
+
+    <string name="uikit_module_enable_title">主开关</string>
+    <string name="uikit_module_enable_summary">启用本模块</string>
+    <string name="uikit_theme_title">主题</string>
+    <string name="uikit_theme_follow_system">自动 (跟随系统)</string>
+    <string name="uikit_theme_light">浅色</string>
+    <string name="uikit_theme_dark">深色</string>
+    <string name="uikit_theme_black">纯黑</string>
+    <string name="uikit_language_title">语言</string>
+    <string name="uikit_language_follow_system">跟随系统</string>
+    <string name="uikit_language_en">English</string>
+    <string name="uikit_language_zh_cn">简体中文</string>
+    <string name="uikit_language_zh_tw">繁體中文</string>
+    <string name="pull_to_refresh_pull">下拉刷新</string>
+    <string name="pull_to_refresh_release">松开刷新</string>
+    <string name="pull_to_refresh_refreshing">正在刷新…</string>
+    <string name="pull_to_refresh_done">刷新完成</string>
+
+    <string name="uikit_style_title">界面风格</string>
+    <string name="uikit_style_summary">在 Expressive 与 Miuix 风格之间切换</string>
+    <string name="uikit_style_expressive">Expressive</string>
+    <string name="uikit_style_miuix">Miuix</string>
+    <string name="uikit_log_export_placeholder_title">日志导出</string>
+    <string name="uikit_log_export_placeholder_summary">正式版考虑性能不做log打印，导出日志请安装ci版本</string>
+    <string name="uikit_log_export_need_root">导出日志需要 root 权限。</string>
+</resources>

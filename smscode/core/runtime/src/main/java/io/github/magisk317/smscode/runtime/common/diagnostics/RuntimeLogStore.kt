@@ -1,0 +1,696 @@
+package io.github.magisk317.smscode.runtime.common.diagnostics
+
+import android.annotation.SuppressLint
+import io.github.magisk317.xposed.logging.MagiskOtel
+import android.app.Application
+import android.content.Context
+import android.net.Uri
+import android.os.Build
+import android.util.Log
+import io.github.magisk317.smscode.runtime.contract.ipc.RuntimeStateProviderContract
+import io.github.magisk317.smscode.runtime.contract.logging.LogRoute
+import io.github.magisk317.xposed.logging.DailyJsonlLogStore
+import io.github.magisk317.xposed.logging.LogEvent
+import io.github.magisk317.xposed.logging.LogLevel
+import io.github.magisk317.xposed.logging.LogSanitizer
+import io.github.magisk317.xposed.logging.MagiskLogPolicy
+import io.github.magisk317.xposed.logging.NoopLogSanitizer
+import io.github.magisk317.smscode.runtime.common.utils.StorageUtils
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.put
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+data class RuntimeLogEntry(
+    val timestamp: Long,
+    val priority: Int,
+    val tag: String,
+    val message: String,
+    val route: String = RuntimeLogStore.ROUTE_APP,
+    val processName: String = "",
+    val pid: Int = 0,
+    val uid: Int = 0,
+    val threadName: String = "",
+    val threadId: Long = 0L,
+    val throwable: String = "",
+)
+
+data class RuntimeLogFileInfo(
+    val name: String,
+    val sizeBytes: Long,
+    val lineCount: Int,
+    val firstTimestamp: Long?,
+    val lastTimestamp: Long?,
+)
+
+data class RuntimeLogFileSummary(
+    val fileCount: Int,
+    val totalBytes: Long,
+    val entryCount: Int,
+    val firstTimestamp: Long?,
+    val lastTimestamp: Long?,
+    val files: List<RuntimeLogFileInfo>,
+)
+
+data class RuntimeLogFileContent(
+    val name: String,
+    val sizeBytes: Long,
+    val displayedLineCount: Int,
+    val truncated: Boolean,
+    val text: String,
+)
+
+object RuntimeLogStore {
+    private const val INTERNAL_TAG = "RuntimeLogStore"
+    private const val LOG_FILE_NAME = "runtime.jsonl"
+    private const val MAX_BUFFER_SIZE = 1200
+    private const val RETENTION_REFRESH_INTERVAL_MS = 5_000L
+    private const val RETENTION_PRUNE_INTERVAL_MS = 60_000L
+    private const val MAX_READ_LINES = 2000
+    const val ROUTE_SMS_HOOK = "sms_hook"
+    const val ROUTE_NMS_HOOK = "nms_hook"
+    const val ROUTE_SYSTEM_INPUT = "system_input"
+    const val ROUTE_PERMISSION_HOOK = "permission_hook"
+    const val ROUTE_FORWARD = "forward"
+    const val ROUTE_SENDER = "sender"
+    const val ROUTE_ROOT_DB = "root_db"
+    const val ROUTE_APP = "app"
+    private const val FILE_TIMESTAMP_PATTERN = "yyyy-MM-dd HH:mm:ss.SSS"
+
+    private val lock = Any()
+
+    // Daily-rotating jsonl mechanics live in the kit; this host keeps the line
+    // schema, the runtime naming policy, the retention source, and the
+    // cross-UID permission-bit hook.
+    private val fileStore = DailyJsonlLogStore(
+        onFileWritten = { file ->
+            StorageUtils.setFileWorldReadable(file, 2)
+            StorageUtils.setFileWorldWritable(file, 1)
+        },
+    )
+    private val buffer = ArrayDeque<RuntimeLogEntry>(MAX_BUFFER_SIZE)
+    private val pendingFileEntries = ArrayDeque<RuntimeLogEntry>(MAX_BUFFER_SIZE)
+    private val dailyRuntimeLogRegex = Regex("""^runtime\.\d{4}-\d{2}-\d{2}\.jsonl$""")
+    private val redundantRoutedRuntimeLogPattern = Regex("""^runtime\.[a-z][a-z0-9_]*\.\d{4}-\d{2}-\d{2}\.jsonl$""")
+    private val jsonLineParser = Json {
+        ignoreUnknownKeys = true
+        explicitNulls = false
+        isLenient = true
+    }
+    private val logExecutor = java.util.concurrent.Executors.newSingleThreadExecutor { runnable ->
+        Thread(runnable, "runtime-log-flusher").apply { isDaemon = true }
+    }
+    private val fileTimestampFormatter = object : ThreadLocal<SimpleDateFormat>() {
+        override fun initialValue(): SimpleDateFormat = SimpleDateFormat(FILE_TIMESTAMP_PATTERN, Locale.getDefault())
+    }
+
+    @Volatile
+    private var appContext: Context? = null
+
+    @Volatile
+    private var enabled: Boolean = false
+
+    @Volatile
+    private var retentionDays: Int = MagiskLogPolicy.DEFAULT_LOG_RETENTION_DAYS
+
+    @Volatile
+    private var lastRetentionRefreshAtMs: Long = 0L
+
+    @Volatile
+    private var lastRetentionPruneAtMs: Long = 0L
+
+    private fun isModuleContext(context: Context?): Boolean {
+        val applicationId = RuntimeDiagnosticsEnvironment.current().applicationId
+        return applicationId.isNotBlank() && context?.packageName == applicationId
+    }
+
+    fun initialize(context: Context, enableDetailedLogs: Boolean) {
+        val resolvedContext = resolveModuleContext(context)
+        appContext = resolvedContext.takeIf { isModuleContext(it) }
+        enabled = enableDetailedLogs
+        setRetentionDays(readConfiguredRetentionDays(appContext ?: context))
+        flushPendingIfPossible()
+    }
+
+    fun setEnabled(on: Boolean) {
+        enabled = on
+    }
+
+    fun isEnabled(): Boolean = enabled
+
+    fun setRetentionDays(days: Int) {
+        retentionDays = MagiskLogPolicy.retentionDays(days)
+    }
+
+    fun append(
+        priority: Int,
+        tag: String,
+        message: String,
+        force: Boolean = false,
+        route: String? = null,
+        throwable: String? = null,
+    ) {
+        if (!enabled && !force) return
+        runCatching {
+            val normalizedRoute = normalizeRoute(route)
+            val thread = Thread.currentThread()
+            val entry = RuntimeLogEntry(
+                timestamp = System.currentTimeMillis(),
+                priority = priority,
+                tag = tag,
+                message = message,
+                route = normalizedRoute,
+                processName = currentProcessName(),
+                pid = android.os.Process.myPid(),
+                uid = android.os.Process.myUid(),
+                threadName = thread.name.orEmpty(),
+                threadId = currentThreadId(thread),
+                throwable = throwable.orEmpty(),
+            )
+            synchronized(lock) {
+                buffer.addLast(entry)
+                while (buffer.size > MAX_BUFFER_SIZE) {
+                    buffer.removeFirst()
+                }
+                pendingFileEntries.addLast(entry)
+                while (pendingFileEntries.size > MAX_BUFFER_SIZE) {
+                    pendingFileEntries.removeFirst()
+                }
+            }
+            triggerFlush()
+        }.onFailure {
+            Log.w(
+                INTERNAL_TAG,
+                "append skipped due to storage exception: ${it.message ?: it.javaClass.simpleName}",
+            )
+        }
+    }
+
+    fun append(
+        event: LogEvent,
+        sanitizer: LogSanitizer = NoopLogSanitizer,
+    ) {
+        val safeMessage = if (event.sensitive) {
+            sanitizer.sanitize(event.message)
+        } else {
+            event.message
+        }
+        append(
+            priority = event.priority,
+            tag = event.tag,
+            message = safeMessage,
+            force = event.force,
+            route = event.route,
+            throwable = event.throwableText ?: event.throwable?.stackTraceToString(),
+        )
+    }
+
+    fun clear() {
+        synchronized(lock) {
+            buffer.clear()
+            pendingFileEntries.clear()
+        }
+        val logDir = getLogDir()
+        if (logDir == null) {
+            MagiskOtel.event(
+                name = "app.monitor",
+                attributes = mapOf(
+                    "result" to "error",
+                    "duration_ms" to "0",
+                    "process" to "app",
+                    "stage" to "runtime_log_clear",
+                    "reason" to "log_dir_missing",
+                ),
+                statusOk = false,
+            )
+            return
+        }
+        val deleted = runCatching {
+            logDir.listFiles()
+                ?.filter { isRuntimeLogFileName(it.name) }
+                ?.onEach { file ->
+                    if (!file.delete()) {
+                        file.writeText("")
+                    }
+                }
+                ?.size
+                ?: 0
+        }.getOrDefault(0)
+        MagiskOtel.event(
+            name = "app.monitor",
+            attributes = mapOf(
+                "result" to "ok",
+                "duration_ms" to "0",
+                "process" to "app",
+                "stage" to "runtime_log_clear",
+                "reason" to "cleared",
+                "found_count" to deleted.toString(),
+            ),
+            statusOk = true,
+        )
+    }
+
+    fun query(minutes: Int?, keyword: String?, limit: Int = 600): List<RuntimeLogEntry> {
+        val memoryList = synchronized(lock) { buffer.toList() }
+        val source = (readFromFiles() + memoryList)
+            .distinctBy { entry -> "${entry.timestamp}:${entry.priority}:${entry.tag}:${entry.route}:${entry.message}" }
+            .sortedBy { it.timestamp }
+        val now = System.currentTimeMillis()
+        val cutoff = if (minutes == null || minutes <= 0) Long.MIN_VALUE else now - minutes * 60_000L
+        val normalizedKeyword = keyword?.trim()?.lowercase(Locale.ROOT).orEmpty()
+        return source.asSequence()
+            .filter { it.timestamp >= cutoff }
+            .filter {
+                if (normalizedKeyword.isEmpty()) {
+                    true
+                } else {
+                    it.tag.lowercase(Locale.ROOT).contains(normalizedKeyword) ||
+                        it.message.lowercase(Locale.ROOT).contains(normalizedKeyword)
+                }
+            }
+            .toList()
+            .takeLast(limit)
+    }
+
+    fun exportText(minutes: Int?, keyword: String?, limit: Int = 600): String {
+        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
+        val lines = query(minutes = minutes, keyword = keyword, limit = limit).map { entry ->
+            val ts = formatter.format(Date(entry.timestamp))
+            "$ts [${priorityName(entry.priority)}/${entry.tag}] ${entry.message}"
+        }
+        return lines.joinToString(separator = "\n\n")
+    }
+
+    fun exportToFile(context: Context, minutes: Int?, keyword: String?, limit: Int = 1200): File? {
+        val startedAt = System.nanoTime()
+        val dir = StorageUtils.getPrivateLogExportDir(
+            context,
+            RuntimeDiagnosticsEnvironment.current().privateExportDirName,
+        )
+        if (!dir.exists() && !dir.mkdirs()) {
+            MagiskOtel.event(
+                name = "app.monitor",
+                attributes = mapOf(
+                    "result" to "error",
+                    "duration_ms" to "0",
+                    "process" to "app",
+                    "stage" to "runtime_log_export",
+                    "reason" to "export_dir_failed",
+                ),
+                statusOk = false,
+            )
+            return null
+        }
+
+        val fileName = "runtime_log_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())}.txt"
+        val file = File(dir, fileName)
+        val content = exportText(minutes = minutes, keyword = keyword, limit = limit)
+        val exported = runCatching {
+            file.writeText(content.ifBlank { "No logs." })
+            StorageUtils.setFileWorldReadable(file, 2)
+            file
+        }.getOrNull()
+        val durationMs = ((System.nanoTime() - startedAt) / 1_000_000L).coerceAtLeast(0L)
+        MagiskOtel.event(
+            name = "app.monitor",
+            attributes = mapOf(
+                "result" to if (exported != null) "ok" else "error",
+                "duration_ms" to durationMs.toString(),
+                "process" to "app",
+                "stage" to "runtime_log_export",
+                "reason" to if (exported != null) "exported" else "export_failed",
+            ),
+            statusOk = exported != null,
+        )
+        return exported
+    }
+
+    fun summarizeFiles(): RuntimeLogFileSummary {
+        val files = getRuntimeLogFiles()
+        val infos = files.map { summarizeFile(it) }
+        return RuntimeLogFileSummary(
+            fileCount = infos.size,
+            totalBytes = infos.sumOf { it.sizeBytes },
+            entryCount = infos.sumOf { it.lineCount },
+            firstTimestamp = infos.mapNotNull { it.firstTimestamp }.minOrNull(),
+            lastTimestamp = infos.mapNotNull { it.lastTimestamp }.maxOrNull(),
+            files = infos,
+        )
+    }
+
+    fun readLogFile(name: String, maxLines: Int = MAX_READ_LINES): RuntimeLogFileContent? {
+        val safeName = name.trim()
+        if (safeName.isBlank() || safeName != File(safeName).name) return null
+        val file = getRuntimeLogFiles().firstOrNull { it.name == safeName } ?: return null
+        val lineLimit = maxLines.coerceAtLeast(1)
+        val lines = readRecentLines(file, lineLimit)
+        return RuntimeLogFileContent(
+            name = file.name,
+            sizeBytes = file.length(),
+            displayedLineCount = lines.size,
+            truncated = lines.size >= lineLimit && file.length() > 0L,
+            text = lines.joinToString(separator = "\n"),
+        )
+    }
+    private fun readFromFiles(): List<RuntimeLogEntry> {
+        val files = getPrimaryLogFiles()
+        if (files.isEmpty()) return emptyList()
+        return runCatching {
+            files.flatMap { file ->
+                readRecentLines(file, MAX_READ_LINES)
+            }
+                .mapNotNull { decode(it) }
+                .sortedBy { it.timestamp }
+                .takeLast(MAX_READ_LINES)
+        }.getOrDefault(emptyList())
+    }
+
+    private fun readRecentLines(file: File, maxLines: Int): List<String> {
+        return runCatching {
+            val lines = ArrayDeque<String>(maxLines.coerceAtLeast(1))
+            file.bufferedReader().useLines { sequence ->
+                sequence.forEach { line ->
+                    lines.addLast(line)
+                    while (lines.size > maxLines) {
+                        lines.removeFirst()
+                    }
+                }
+            }
+            lines.toList()
+        }.getOrDefault(emptyList())
+    }
+
+    private fun getPrimaryLogFiles(): List<File> {
+        return getRuntimeLogFiles()
+            .filter { isPrimaryRuntimeLogFileName(it.name) }
+            .sortedWith(compareBy<File> { runtimeLogSortTime(it) }.thenBy { it.name })
+    }
+
+    private fun getRuntimeLogFiles(): List<File> {
+        val context = ensureAppContext() ?: return emptyList()
+        val dir = StorageUtils.getLogDir(context) ?: return emptyList()
+        return dir.listFiles()
+            .orEmpty()
+            .filter { it.isFile && isRuntimeLogFileName(it.name) && !isRedundantRoutedRuntimeLog(it) }
+            .sortedWith(compareBy<File> { runtimeLogSortTime(it) }.thenBy { it.name })
+    }
+
+    private fun summarizeFile(file: File): RuntimeLogFileInfo {
+        var lineCount = 0
+        var firstTimestamp: Long? = null
+        var lastTimestamp: Long? = null
+        runCatching {
+            file.bufferedReader().useLines { lines ->
+                lines.forEach { line ->
+                    val entry = decode(line) ?: return@forEach
+                    lineCount += 1
+                    if (firstTimestamp == null || entry.timestamp < firstTimestamp!!) {
+                        firstTimestamp = entry.timestamp
+                    }
+                    if (lastTimestamp == null || entry.timestamp > lastTimestamp!!) {
+                        lastTimestamp = entry.timestamp
+                    }
+                }
+            }
+        }.onFailure {
+            // ignored here: no logger is reachable from this file and the failure has no remedy at this point
+        }.onFailure {
+            // ignored here: no logger is reachable from this file and the failure has no remedy at this point
+        }.onFailure {
+            // ignored here: no logger is reachable from this file and the failure has no remedy at this point
+        }.onFailure {
+            // ignored here: no logger is reachable from this file and the failure has no remedy at this point
+        }.onFailure {
+            // ignored here: no logger is reachable from this file and the failure has no remedy at this point
+        }.onFailure {
+            // ignored here: no logger is reachable from this file and the failure has no remedy at this point
+        }.onFailure {
+            // ignored here: no logger is reachable from this file and the failure has no remedy at this point
+        }
+        return RuntimeLogFileInfo(
+            name = file.name,
+            sizeBytes = file.length(),
+            lineCount = lineCount,
+            firstTimestamp = firstTimestamp,
+            lastTimestamp = lastTimestamp,
+        )
+    }
+
+    private fun getLogDir(): File? {
+        val context = ensureAppContext() ?: return null
+        return StorageUtils.getLogDir(context)
+    }
+
+    private fun ensureAppContext(): Context? = synchronized(lock) {
+        val existing = appContext
+        if (isModuleContext(existing)) {
+            return@synchronized existing
+        }
+        val resolved = resolveContextFromActivityThreadLocked() ?: return@synchronized null
+        if (!isModuleContext(resolved)) {
+            return@synchronized null
+        }
+        appContext = resolved
+        return@synchronized resolved
+    }
+
+    @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
+    private fun resolveContextFromActivityThreadLocked(): Context? {
+        val application = runCatching {
+            val activityThreadClass = Class.forName("android.app.ActivityThread")
+            val currentApplication = activityThreadClass.getDeclaredMethod("currentApplication")
+            currentApplication.isAccessible = true
+            currentApplication.invoke(null) as? Context
+        }.getOrNull() ?: return null
+        return resolveModuleContext(application)
+    }
+
+    private fun resolveModuleContext(context: Context): Context {
+        val app = context.applicationContext ?: context
+        val applicationId = RuntimeDiagnosticsEnvironment.current().applicationId
+        if (applicationId.isBlank()) return app
+        if (app.packageName == applicationId) return app
+
+        // Skip direct file writing for system_server or processes with different UIDs
+        // as they likely won't have permission to write to the app's data directory.
+        if (android.os.Process.myUid() == 1000 || android.os.Process.myUid() == 0) {
+            return app
+        }
+
+        return runCatching {
+            app.createPackageContext(applicationId, Context.CONTEXT_IGNORE_SECURITY)
+        }.getOrElse { app }
+    }
+
+    private fun triggerFlush() {
+        logExecutor.execute {
+            synchronized(lock) {
+                flushPendingLocked()
+            }
+        }
+    }
+
+    private fun flushPendingIfPossible() {
+        synchronized(lock) {
+            flushPendingLocked()
+        }
+    }
+
+    private fun flushPendingLocked() {
+        if (pendingFileEntries.isEmpty()) return
+        runCatching {
+            val context = appContext ?: resolveContextFromActivityThreadLocked() ?: return
+            if (!isModuleContext(context)) return
+            if (appContext == null) {
+                appContext = context
+            }
+            maybeRefreshRetentionLocked(context)
+            val logDir = StorageUtils.getLogDir(context) ?: return
+            maybePruneExpiredLogsLocked(logDir, System.currentTimeMillis())
+            while (pendingFileEntries.isNotEmpty()) {
+                val entry = pendingFileEntries.removeFirst()
+                fileStore.appendLine(
+                    logDir = logDir,
+                    baseFileNames = listOf(LOG_FILE_NAME),
+                    timestampMs = entry.timestamp,
+                    line = encode(entry),
+                )
+            }
+        }.onFailure {
+            Log.w(
+                INTERNAL_TAG,
+                "flushPendingLocked skipped due to storage exception: ${it.message ?: it.javaClass.simpleName}",
+            )
+        }
+    }
+
+    private fun maybeRefreshRetentionLocked(context: Context) {
+        val now = System.currentTimeMillis()
+        if (now - lastRetentionRefreshAtMs < RETENTION_REFRESH_INTERVAL_MS) return
+        lastRetentionRefreshAtMs = now
+        setRetentionDays(readConfiguredRetentionDays(context))
+    }
+
+    private fun readConfiguredRetentionDays(context: Context): Int {
+        // Try Provider first — works in hook process across UIDs where direct
+        // SharedPreferences access fails with a ContextImpl warning.
+        val providerBundle = runCatching {
+            context.contentResolver.call(
+                Uri.parse("content://${context.packageName}.db.provider"),
+                RuntimeStateProviderContract.METHOD_GET_RETENTION_DAYS,
+                null,
+                null,
+            )
+        }.getOrNull()
+        if (providerBundle != null) {
+            return MagiskLogPolicy.retentionDays(
+                providerBundle.getInt(
+                    RuntimeStateProviderContract.RESULT_RETENTION_DAYS,
+                    MagiskLogPolicy.DEFAULT_LOG_RETENTION_DAYS,
+                ),
+            )
+        }
+
+        // Fallback to direct read (works in app process).
+        val config = RuntimeDiagnosticsEnvironment.current()
+        return MagiskLogPolicy.retentionDays(
+            config.logRetentionDaysProvider?.invoke(context)
+                ?: MagiskLogPolicy.DEFAULT_LOG_RETENTION_DAYS,
+        )
+    }
+
+    private fun maybePruneExpiredLogsLocked(logDir: File, now: Long) {
+        if (now - lastRetentionPruneAtMs < RETENTION_PRUNE_INTERVAL_MS) return
+        lastRetentionPruneAtMs = now
+        fileStore.pruneExpired(
+            logDir = logDir,
+            nowMs = now,
+            retentionDays = retentionDays,
+            isManagedFile = ::isRuntimeLogFileName,
+        )
+        deleteRedundantRoutedLogs(logDir)
+    }
+
+    internal fun deleteRedundantRoutedLogs(logDir: File): Int {
+        return logDir.listFiles().orEmpty().count { file ->
+            isRedundantRoutedRuntimeLog(file) && file.delete()
+        }
+    }
+
+    internal fun isRedundantRoutedRuntimeLog(file: File): Boolean {
+        return file.isFile && redundantRoutedRuntimeLogPattern.matches(file.name)
+    }
+
+    private fun isRuntimeLogFileName(name: String): Boolean {
+        return name == LOG_FILE_NAME ||
+            (name.startsWith("runtime.") && name.endsWith(".jsonl"))
+    }
+
+    private fun isPrimaryRuntimeLogFileName(name: String): Boolean {
+        return name == LOG_FILE_NAME || dailyRuntimeLogRegex.matches(name)
+    }
+
+    private fun runtimeLogSortTime(file: File): Long {
+        return fileStore.fileDateStartMs(file.name) ?: file.lastModified()
+    }
+
+    private fun encode(entry: RuntimeLogEntry): String {
+        return buildJsonObject {
+            put("timestamp", entry.timestamp)
+            put("time", formatFileTimestamp(entry.timestamp))
+            put("priority", entry.priority)
+            put("level", priorityName(entry.priority))
+            put("tag", entry.tag)
+            put("message", entry.message)
+            put("route", entry.route)
+            put("process", entry.processName)
+            put("pid", entry.pid)
+            put("uid", entry.uid)
+            put("thread", entry.threadName)
+            put("threadId", entry.threadId)
+            put("throwable", entry.throwable)
+        }.toString()
+    }
+
+    private fun decode(line: String): RuntimeLogEntry? {
+        val trimmed = line.trim()
+        if (!trimmed.startsWith("{")) return null
+        return decodeJsonLine(trimmed)
+    }
+
+    private fun decodeJsonLine(line: String): RuntimeLogEntry? {
+        return runCatching {
+            val jsonObject = jsonLineParser.parseToJsonElement(line).jsonObject
+            val timestamp = jsonObject["timestamp"]?.jsonPrimitive?.longOrNull
+                ?: jsonObject["ts"]?.jsonPrimitive?.longOrNull
+                ?: return null
+            val priority = jsonObject["priority"]?.jsonPrimitive?.intOrNull
+                ?: priorityFromName(jsonObject["level"]?.jsonPrimitive?.contentOrNull)
+                ?: Log.INFO
+            RuntimeLogEntry(
+                timestamp = timestamp,
+                priority = priority,
+                tag = jsonObject["tag"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+                message = jsonObject["message"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+                route = normalizeRoute(jsonObject["route"]?.jsonPrimitive?.contentOrNull),
+                processName = jsonObject["process"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+                pid = jsonObject["pid"]?.jsonPrimitive?.intOrNull ?: 0,
+                uid = jsonObject["uid"]?.jsonPrimitive?.intOrNull ?: 0,
+                threadName = jsonObject["thread"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+                threadId = jsonObject["threadId"]?.jsonPrimitive?.longOrNull ?: 0L,
+                throwable = jsonObject["throwable"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+            )
+        }.getOrNull()
+    }
+
+    private fun formatFileTimestamp(timestamp: Long): String {
+        return fileTimestampFormatter.get()?.format(Date(timestamp)) ?: timestamp.toString()
+    }
+
+    private fun currentProcessName(): String {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val processName = runCatching {
+                Application.getProcessName()
+            }.getOrNull().orEmpty()
+            if (processName.isNotBlank()) {
+                return processName
+            }
+        }
+        return readProcessNameFromProc()
+    }
+
+    private fun readProcessNameFromProc(): String {
+        return runCatching {
+            File("/proc/self/cmdline").readText().substringBefore('\u0000').trim()
+        }.getOrNull().orEmpty()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun currentThreadId(thread: Thread): Long {
+        return thread.id
+    }
+
+    private fun priorityName(priority: Int): String {
+        return LogLevel.priorityName(priority)
+    }
+
+    private fun priorityFromName(level: String?): Int? {
+        return LogLevel.fromName(level)?.priority
+    }
+
+    private fun normalizeRoute(route: String?): String {
+        return LogRoute.normalize(route)
+    }
+
+    fun routeFromCallerClassName(className: String?): String {
+        return RuntimeDiagnosticsEnvironment.current().routeResolver?.invoke(className) ?: ROUTE_APP
+    }
+}

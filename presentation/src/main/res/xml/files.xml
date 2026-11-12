@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <files-path
+        name="diagnostic_exports"
+        path="smscode_logs/" />
+
+    <files-path
+        name="private_backups"
+        path="SmsCode/" />
+
+    <external-files-path
+        name="backups"
+        path="Documents/SmsCode/" />
+</paths>

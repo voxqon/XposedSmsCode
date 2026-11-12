@@ -1,0 +1,7 @@
+# Production Kotlin god-file review debt (XposedSmsCode).
+# Format: PATH|EXACT_LINES|REVIEW_REASON
+# This is not a growth budget: verifyGodFileLimits requires exact counts and rejects
+# new entries unless the architecture review explicitly updates this file.
+presentation/src/main/kotlin/io/github/magisk317/smscode/ui/home/ComposeSettingsScreen.kt|1911|Settings shell across github/play flavors; update controls and external privacy links removed during offline review
+presentation/src/main/kotlin/io/github/magisk317/smscode/ui/record/CodeRecordScreen.kt|1213|Record list with metadata expansion; retained UI review debt
+runtime/src/main/kotlin/io/github/magisk317/smscode/data/db/DBProvider.kt|949|Room provider with authenticated IPC and mutation checks; retained database facade review debt

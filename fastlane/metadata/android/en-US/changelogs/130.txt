@@ -1,0 +1,6 @@
+- Updated to 3.3.6 (130).
+- Fixed SMS code extraction (Persian/Arabic digits, keyword-adjacent, #267).
+- Fixed SMS record insertion failure.
+- Fixed icons/refresh rendering under the Miuix theme.
+- Toolchain switched to Java 27 bytecode.
+- https://gitlab.com/magisk3171/XposedSmsCode/-/releases

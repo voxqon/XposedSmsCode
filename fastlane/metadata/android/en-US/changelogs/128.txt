@@ -1,0 +1,5 @@
+- Updated to 3.3.4 (128).
+- Added the QQ channel entry to the overview page.
+- Removed the Google sign-in activation path.
+- Release pipeline now uses the shared toolkit with GitHub and module-repo sync.
+- https://gitlab.com/magisk3171/XposedSmsCode/-/releases

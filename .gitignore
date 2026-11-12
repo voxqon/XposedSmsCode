@@ -1,0 +1,99 @@
+# -------------------------------------------------------------------------
+# Hidden Directories
+# -------------------------------------------------------------------------
+# Ignore all hidden directories (e.g. .idea/, .gradle/, .vscode/, .kotlin/, etc.)
+.*/
+!/.github/
+!/.gitlab/
+
+# -------------------------------------------------------------------------
+# Build & Compiled Files
+# -------------------------------------------------------------------------
+*.iml
+*.apk
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+build/
+/build
+
+# -------------------------------------------------------------------------
+# Configuration & Properties
+# -------------------------------------------------------------------------
+*.properties
+!gradle/wrapper/gradle-wrapper.properties
+!gradle.properties
+!/build-logic/shared/gradle/wrapper/gradle-wrapper.properties
+!/smscode/core/gradle.properties
+
+# -------------------------------------------------------------------------
+# Logs & OS Files
+# -------------------------------------------------------------------------
+*.log
+log/
+!**/data/log/
+captures/
+/captures
+
+# -------------------------------------------------------------------------
+# Local agent guidance
+# -------------------------------------------------------------------------
+AGENTS.md
+AGENTS.override.md
+agents.md
+agents.override.md
+
+# -------------------------------------------------------------------------
+# Tools & External
+# -------------------------------------------------------------------------
+# Keystore
+*.jks
+*.p12
+*.pfx
+*.keystore
+app/signature.properties
+
+# Google Services
+google-services.json
+
+# Eclipse
+proguard/
+*.project
+*/.classpath
+
+# Freeline
+freeline.py
+freeline/
+freeline_project_description.json
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/readme.md
+
+# Python
+venv/
+__pycache__/
+*.py[cod]
+
+# Avoid accidentally publishing donation data or private SMS screenshots.
+/docs/DONATIONS.md
+/art/sponsorship/
+/presentation/src/main/res/drawable-nodpi/alipay.png
+/presentation/src/main/res/drawable-nodpi/wx.png
+/magisk-ui-kit/src/androidMain/res/drawable-nodpi/alipay.png
+/magisk-ui-kit/src/androidMain/res/drawable-nodpi/wx.png
+/art/cn/04.png
+/art/en/01.png
+
+# The old secret-scan exceptions refer to a different imported history.
+/.gitleaksignore
+
+# Local dependency and toolchain caches are not source files.
+/third_party/maven/
+/third_party/toolchain/

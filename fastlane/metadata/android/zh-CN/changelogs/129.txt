@@ -1,0 +1,5 @@
+- 升级至 3.3.5（129）。
+- 界面架构调整，新增主题页。
+- 通知与偏好存储优化。
+- 构建与依赖更新。
+- https://gitlab.com/magisk3171/XposedSmsCode/-/releases

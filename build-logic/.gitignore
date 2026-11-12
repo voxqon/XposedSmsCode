@@ -1,0 +1,11 @@
+.gradle/
+build/
+*.iml
+.kotlin/
+.idea/
+out/
+
+AGENTS.md
+AGENTS.override.md
+agents.md
+agents.override.md

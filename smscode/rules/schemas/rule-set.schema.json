@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/magisk3171/smscode-rules/schemas/rule-set.schema.json",
+  "title": "SmsCode Rule Set",
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nullableNonEmptyString": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ruleSetId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    },
+    "ruleId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "locale": {
+      "type": "string",
+      "pattern": "^[A-Za-z]{2,3}(?:-[A-Za-z0-9]+)*$"
+    },
+    "packageName": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z][A-Za-z0-9_]*)+$"
+    }
+  },
+  "type": "object",
+  "required": [
+    "specVersion",
+    "id",
+    "name",
+    "locale",
+    "updatedAt",
+    "rules"
+  ],
+  "properties": {
+    "specVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "id": {
+      "$ref": "#/$defs/ruleSetId"
+    },
+    "name": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "description": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "locale": {
+      "$ref": "#/$defs/locale"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "codeKeyword",
+          "codeRegex",
+          "examples"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/ruleId"
+          },
+          "company": {
+            "$ref": "#/$defs/nullableNonEmptyString"
+          },
+          "codeKeyword": {
+            "$ref": "#/$defs/nonEmptyString"
+          },
+          "codeRegex": {
+            "$ref": "#/$defs/nonEmptyString"
+          },
+          "senderRegex": {
+            "$ref": "#/$defs/nullableNonEmptyString"
+          },
+          "packageNameHint": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/packageName"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "rejectedSuffixes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "uniqueItems": true
+          },
+          "notes": {
+            "$ref": "#/$defs/nonEmptyString"
+          },
+          "examples": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "body",
+                "expectedCode"
+              ],
+              "properties": {
+                "body": {
+                  "$ref": "#/$defs/nonEmptyString"
+                },
+                "expectedCode": {
+                  "$ref": "#/$defs/nonEmptyString"
+                },
+                "notes": {
+                  "$ref": "#/$defs/nonEmptyString"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

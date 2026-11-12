@@ -1,0 +1,6 @@
+- Updated to 3.3.8 (132).
+- Fixed database schema migrations and upgrade compatibility.
+- Fixed potential cascade deletion of forwarding rules during schema rebuild.
+- Fixed Miuix theme rendering issues on the record page.
+- Upgraded dependencies and improved build pipeline.
+- https://gitlab.com/magisk3171/XposedSmsCode/-/releases

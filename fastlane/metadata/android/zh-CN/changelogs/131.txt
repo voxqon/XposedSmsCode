@@ -1,0 +1,6 @@
+- 升级至 3.3.7（131）。
+- 重构短信拦截与分发链路。
+- 数据持久层与业务逻辑下沉至共享模块。
+- 统一卡片间距并对齐新版 UI 组件。
+- 升级 Gradle 9.8.1。
+- https://gitlab.com/magisk3171/XposedSmsCode/-/releases

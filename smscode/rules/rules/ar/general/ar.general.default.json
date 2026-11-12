@@ -1,0 +1,94 @@
+{
+  "specVersion": 1,
+  "id": "ar.general.default",
+  "name": "قواعد رمز التحقق العامة (العربية)",
+  "description": "阿拉伯语短信验证码兜底规则：رمز/كود 字面量匹配。",
+  "locale": "ar",
+  "updatedAt": "2026-10-06T00:58:10+08:00",
+  "rules": [
+    {
+      "id": "ar-default-numeric-ramz",
+      "company": null,
+      "codeKeyword": "رمز",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "ريال"
+      ],
+      "notes": "阿拉伯语关键词兜底（رمز）。",
+      "examples": [
+        {
+          "body": "رمز التحقق: 482910",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "ar-default-alphanumeric-ramz",
+      "company": null,
+      "codeKeyword": "رمز",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "ريال"
+      ],
+      "notes": "阿拉伯语关键词兜底（رمز）。",
+      "examples": [
+        {
+          "body": "رمز التحقق: AB12CD",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    },
+    {
+      "id": "ar-default-numeric-kod",
+      "company": null,
+      "codeKeyword": "كود",
+      "codeRegex": "(?<![a-zA-Z0-9])[0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 10,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "ريال"
+      ],
+      "notes": "阿拉伯语关键词兜底（كود）。",
+      "examples": [
+        {
+          "body": "كود التحقق: 482910",
+          "expectedCode": "482910"
+        }
+      ]
+    },
+    {
+      "id": "ar-default-alphanumeric-kod",
+      "company": null,
+      "codeKeyword": "كود",
+      "codeRegex": "(?<![a-zA-Z0-9])[a-zA-Z0-9]{4,8}(?![a-zA-Z0-9])",
+      "priority": 5,
+      "rejectedSuffixes": [
+        "mb",
+        "gb",
+        "kb",
+        "tb",
+        "ريال"
+      ],
+      "notes": "阿拉伯语关键词兜底（كود）。",
+      "examples": [
+        {
+          "body": "كود التحقق: AB12CD",
+          "expectedCode": "AB12CD"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+- Updated to 3.3.5 (129).
+- Reworked the UI architecture and added a theme page.
+- Notification and preference handling improvements.
+- Build and dependency updates.
+- https://gitlab.com/magisk3171/XposedSmsCode/-/releases

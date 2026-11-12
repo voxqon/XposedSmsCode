@@ -1,0 +1,6 @@
+- Updated to 3.3.3 (127).
+- Unified UI components and general settings.
+- Activation UI: issued time, one-tap device ID copy, token hidden when active.
+- Unified log export with on-write sanitization.
+- Upgraded Kotlin, AGP, and dependencies.
+- https://gitlab.com/magisk3171/XposedSmsCode/-/releases

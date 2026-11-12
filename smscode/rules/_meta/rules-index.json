@@ -1,0 +1,127 @@
+{
+  "sourceRepo": "magisk3171/smscode-rules",
+  "branch": "main",
+  "generatedAt": "2026-10-22T02:53:54+00:00",
+  "files": [
+    {
+      "path": "rules/ar/general/ar.general.default.json",
+      "id": "ar.general.default",
+      "name": "قواعد رمز التحقق العامة (العربية)",
+      "locale": "ar",
+      "updatedAt": "2026-10-06T00:58:10+08:00",
+      "ruleCount": 4,
+      "sha256": "c6449cc2fd17f64e82a9d2b9c4b55616658bc8bbd8a9cd8e77224c5dbcb57f51",
+      "size": 2307
+    },
+    {
+      "path": "rules/cn/bank/cn.bank.hsbc-china.json",
+      "id": "cn.bank.hsbc-china",
+      "name": "汇丰银行中国",
+      "locale": "zh-CN",
+      "updatedAt": "2026-05-01T00:00:00+08:00",
+      "ruleCount": 1,
+      "sha256": "d441ed59811aa3a7e5f717159836d8e3f3df002c33587233610976b36ef7de59",
+      "size": 789
+    },
+    {
+      "path": "rules/cn/bank/cn.bank.icbc.json",
+      "id": "cn.bank.icbc",
+      "name": "中国工商银行",
+      "locale": "zh-CN",
+      "updatedAt": "2026-10-22T10:55:00+08:00",
+      "ruleCount": 1,
+      "sha256": "13cf2d1db63d61154feb41dceb12e9aa30394b782dfc458260f23ddce6524e64",
+      "size": 774
+    },
+    {
+      "path": "rules/cn/carrier/cn.carrier.china-mobile-cloud-drive.json",
+      "id": "cn.carrier.china-mobile-cloud-drive",
+      "name": "中国移动云盘",
+      "locale": "zh-CN",
+      "updatedAt": "2026-05-01T00:00:00+08:00",
+      "ruleCount": 2,
+      "sha256": "e764a4de3371845560f38e8746371298118e8fec3aacc7eb806e6206cff63434",
+      "size": 1947
+    },
+    {
+      "path": "rules/cn/carrier/cn.carrier.china-mobile.json",
+      "id": "cn.carrier.china-mobile",
+      "name": "中国移动",
+      "locale": "zh-CN",
+      "updatedAt": "2026-10-05T00:00:00+08:00",
+      "ruleCount": 1,
+      "sha256": "ace862f3fd4cc6fb8f08c19dc14ff340395b05294a9d944ed542041bddf3895d",
+      "size": 1271
+    },
+    {
+      "path": "rules/cn/general/cn.general.default.json",
+      "id": "cn.general.default",
+      "name": "中文通用验证码规则",
+      "locale": "zh-CN",
+      "updatedAt": "2026-10-06T00:58:39+08:00",
+      "ruleCount": 78,
+      "sha256": "d8ca5839e6ba2323e29b062a48d3cfa832a2376acc91f39b69204ace78c52c71",
+      "size": 63165
+    },
+    {
+      "path": "rules/cn/portal/cn.portal.unified-login.json",
+      "id": "cn.portal.unified-login",
+      "name": "统一门户登录",
+      "locale": "zh-CN",
+      "updatedAt": "2026-06-13T00:00:00+08:00",
+      "ruleCount": 1,
+      "sha256": "f32e0a4491d041516a003e2fa67a924fb586ee9a4f88e87d333e2b5cfc3607b0",
+      "size": 856
+    },
+    {
+      "path": "rules/fa/general/fa.general.default.json",
+      "id": "fa.general.default",
+      "name": "قوانین عمومی کد تأیید فارسی",
+      "locale": "fa",
+      "updatedAt": "2026-10-06T00:58:10+08:00",
+      "ruleCount": 6,
+      "sha256": "118f423196131e9cd24f4a2d9e486af8d420697a365b7a463aecf44edea66e0c",
+      "size": 3425
+    },
+    {
+      "path": "rules/global/app/global.app.email-voice.json",
+      "id": "global.app.email-voice",
+      "name": "Email and Voice app notifications",
+      "locale": "und",
+      "updatedAt": "2026-07-06T00:00:00+08:00",
+      "ruleCount": 4,
+      "sha256": "ef9bdae11c512903967a6fd7b8b244bd290149ac3a5da68171747ea80f58750f",
+      "size": 2912
+    },
+    {
+      "path": "rules/global/general/global.general.default.json",
+      "id": "global.general.default",
+      "name": "通用验证码规则",
+      "locale": "und",
+      "updatedAt": "2026-10-06T00:58:39+08:00",
+      "ruleCount": 20,
+      "sha256": "a5e5229cabb779efee259cfdeeb6e0dfa8d8d0cd38ffe689f7baa3b22a721530",
+      "size": 14983
+    },
+    {
+      "path": "rules/ru/general/ru.general.default.json",
+      "id": "ru.general.default",
+      "name": "Русские общие правила кода",
+      "locale": "ru",
+      "updatedAt": "2026-10-06T00:58:10+08:00",
+      "ruleCount": 6,
+      "sha256": "fe9d3684791870b1160c943a166aedb0ff3a4d89c1535ab4782b07efafeed4ec",
+      "size": 3580
+    },
+    {
+      "path": "rules/vi/general/vi.general.default.json",
+      "id": "vi.general.default",
+      "name": "Quy tắc mã xác minh chung (tiếng Việt)",
+      "locale": "vi",
+      "updatedAt": "2026-10-06T00:58:10+08:00",
+      "ruleCount": 2,
+      "sha256": "b8e74d149013967eee0b35c8c8d3c2d073582798c80444fea4d23428a971956b",
+      "size": 1529
+    }
+  ]
+}
